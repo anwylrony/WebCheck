@@ -3,10 +3,6 @@ Here is a comprehensive `README.md` file based on the analysis of the provided P
 ```markdown
 # 🛡️ Advanced VAPT Scanner
 
-[![Python 3.6+](https://img.shields.io/badge/Python-3.6%2B-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/License-Educational%20Use-yellow.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)]()
-
 A comprehensive, all-in-one Vulnerability Assessment and Penetration Testing (VAPT) scanner written in Python. This tool automates the detection of security misconfigurations and common web vulnerabilities, generating professional reports with risk scores and interactive charts.
 
 ![Banner](https://via.placeholder.com/800x200?text=VAPT+Scanner+Banner) 
@@ -135,7 +131,6 @@ urllib3>=1.26.0
 5.  **Reporting:** Aggregates findings, calculates a risk score, and generates dual-format reports.
 
 ---
-## Screenshoot
 
 ## 🤝 Contributing
 
