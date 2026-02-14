@@ -51,7 +51,7 @@ The scanner performs a wide range of checks to identify security weaknesses:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/vapt-scanner.git
+   git clone https://github.com/anwylrony/vapt-scanner.git
    cd vapt-scanner
 ````
 
@@ -59,7 +59,7 @@ The scanner performs a wide range of checks to identify security weaknesses:
    Create a `requirements.txt` file (see below) or install directly:
 
    ```bash
-   pip install requests urllib3
+   pip3 install requests urllib3
    ```
 
 ---
