@@ -1,0 +1,1412 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAPT Security Report - testphp.vulnweb.com</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e4e4e4;
+            line-height: 1.6;
+        }
+        
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header Section */
+        .header {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0,123,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+        }
+        
+        .target-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .info-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .info-card label {
+            display: block;
+            font-size: 0.85em;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+        
+        .info-card value {
+            display: block;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #e2e8f0;
+            word-break: break-all;
+        }
+        
+        /* Risk Score Section */
+        .risk-section {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .risk-score-container {
+            text-align: center;
+        }
+        
+        .risk-score {
+            font-size: 4em;
+            font-weight: 700;
+            color: #dc3545;
+            text-shadow: 0 0 30px #dc354540;
+        }
+        
+        .risk-level {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #dc3545;
+            margin-top: 5px;
+        }
+        
+        .risk-label {
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .stat-card.critical { border-top: 4px solid #dc3545; }
+        .stat-card.high { border-top: 4px solid #fd7e14; }
+        .stat-card.medium { border-top: 4px solid #ffc107; }
+        .stat-card.low { border-top: 4px solid #17a2b8; }
+        .stat-card.info { border-top: 4px solid #6c757d; }
+        .stat-card.total { border-top: 4px solid #7c3aed; }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card.critical .stat-number { color: #dc3545; }
+        .stat-card.high .stat-number { color: #fd7e14; }
+        .stat-card.medium .stat-number { color: #ffc107; }
+        .stat-card.low .stat-number { color: #17a2b8; }
+        .stat-card.info .stat-number { color: #94a3b8; }
+        .stat-card.total .stat-number { color: #7c3aed; }
+        
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Vulnerabilities Table */
+        .table-section {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        
+        .table-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #e2e8f0;
+        }
+        
+        .vuln-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .vuln-table th {
+            background: rgba(0,0,0,0.3);
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+        }
+        
+        .vuln-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            vertical-align: top;
+        }
+        
+        .vuln-row {
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .vuln-row:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .severity-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+            color: white;
+            text-transform: uppercase;
+        }
+        
+        .url-link {
+            color: #60a5fa;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        
+        .url-link:hover {
+            text-decoration: underline;
+        }
+        
+        .expand-btn {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .expand-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        /* Details Row */
+        .details-row {
+            display: none;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .details-row.show {
+            display: table-row;
+        }
+        
+        .details-content {
+            padding: 20px;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .detail-item {
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .detail-label {
+            display: block;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .detail-item p {
+            color: #cbd5e1;
+            font-size: 0.95em;
+        }
+        
+        .payload-code {
+            display: block;
+            background: rgba(0,0,0,0.4);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85em;
+            color: #f472b6;
+            word-break: break-all;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                min-width: auto;
+            }
+            
+            .risk-score {
+                font-size: 3em;
+            }
+            
+            .logo {
+                font-size: 1.8em;
+            }
+            
+            .vuln-table {
+                font-size: 0.85em;
+            }
+        }
+        
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .header, .risk-section, .stat-card, .chart-container, .table-section {
+                background: white;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="logo">🛡️ VAPT Security Report</div>
+                <div class="subtitle">Comprehensive Vulnerability Assessment & Penetration Testing Analysis</div>
+                
+                <div class="target-info">
+                    <div class="info-card">
+                        <label>🎯 Target</label>
+                        <value>http://testphp.vulnweb.com</value>
+                    </div>
+                    <div class="info-card">
+                        <label>📅 Scan Date</label>
+                        <value>2026-02-14 13:18:27</value>
+                    </div>
+                    <div class="info-card">
+                        <label>🌐 Domain</label>
+                        <value>testphp.vulnweb.com</value>
+                    </div>
+                    <div class="info-card">
+                        <label>⏱️ Duration</label>
+                        <value>Complete Scan</value>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Risk Score -->
+        <div class="risk-section">
+            <div class="risk-score-container">
+                <div class="risk-score">90</div>
+                <div class="risk-level">CRITICAL RISK</div>
+                <div class="risk-label">Overall Security Score</div>
+            </div>
+            
+            <div class="stats-grid" style="flex: 1; max-width: 600px;">
+                <div class="stat-card critical">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Critical</div>
+                </div>
+                <div class="stat-card high">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">High</div>
+                </div>
+                <div class="stat-card medium">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Medium</div>
+                </div>
+                <div class="stat-card low">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Low</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Info</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-number">21</div>
+                <div class="stat-label">Total Vulnerabilities</div>
+            </div>
+            <div class="stat-card high">
+                <div class="stat-number">5</div>
+                <div class="stat-label">High Priority Issues</div>
+            </div>
+            <div class="stat-card medium">
+                <div class="stat-number">8</div>
+                <div class="stat-label">Categories Affected</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: #28a745;">10%</div>
+                <div class="stat-label">Security Score</div>
+            </div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="charts-section">
+            <div class="chart-container">
+                <div class="chart-title">📊 Vulnerability Distribution</div>
+                <div class="chart-wrapper">
+                    <canvas id="severityChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">📈 Categories Breakdown</div>
+                <div class="chart-wrapper">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vulnerabilities Table -->
+        <div class="table-section">
+            <div class="table-title">🔍 Detailed Vulnerability Findings</div>
+            <table class="vuln-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Severity</th>
+                        <th>Vulnerability</th>
+                        <th>URL</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+            <tr class="vuln-row" onclick="toggleDetails(1)">
+                <td><strong>#1</strong></td>
+                <td><span class="severity-badge" style="background-color: #dc3545;">CRITICAL</span></td>
+                <td><strong>SQL Injection in Form</strong></td>
+                <td><a href="http://testphp.vulnweb.com/search.php?test=query" target="_blank" class="url-link">http://testphp.vulnweb.com/search.php?test=query</a></td>
+                <td>SQL Injection vulnerability detected in form at http://testphp.vulnweb.com/search.php?test=query. Th...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(1)">Details</button></td>
+            </tr>
+            <tr id="details-1" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>SQL Injection vulnerability detected in form at http://testphp.vulnweb.com/search.php?test=query. The form appears to be vulnerable to SQL injection attacks.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com/search.php?test=query" target="_blank">http://testphp.vulnweb.com/search.php?test=query</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">' OR '1'='1'--</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Use parameterized queries/prepared statements. Implement proper input validation and sanitization.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:47</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(2)">
+                <td><strong>#2</strong></td>
+                <td><span class="severity-badge" style="background-color: #fd7e14;">HIGH</span></td>
+                <td><strong>Missing Security Header: Content-Security-Policy</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The Content-Security-Policy header is missing from the HTTP response. This header helps protect agai...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(2)">Details</button></td>
+            </tr>
+            <tr id="details-2" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The Content-Security-Policy header is missing from the HTTP response. This header helps protect against various attacks and should be implemented.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Implement Content-Security-Policy header to prevent XSS and data injection attacks.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(3)">
+                <td><strong>#3</strong></td>
+                <td><span class="severity-badge" style="background-color: #fd7e14;">HIGH</span></td>
+                <td><strong>Missing Security Header: Strict-Transport-Security</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The Strict-Transport-Security header is missing from the HTTP response. This header helps protect ag...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(3)">Details</button></td>
+            </tr>
+            <tr id="details-3" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The Strict-Transport-Security header is missing from the HTTP response. This header helps protect against various attacks and should be implemented.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Add Strict-Transport-Security header to enforce HTTPS connections.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(4)">
+                <td><strong>#4</strong></td>
+                <td><span class="severity-badge" style="background-color: #fd7e14;">HIGH</span></td>
+                <td><strong>HTTPS Not Enforced</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The website is accessible over HTTP without HTTPS. All traffic should be encrypted to protect sensit...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(4)">Details</button></td>
+            </tr>
+            <tr id="details-4" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The website is accessible over HTTP without HTTPS. All traffic should be encrypted to protect sensitive data in transit.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Implement HTTPS and redirect all HTTP traffic to HTTPS. Add HSTS header to enforce HTTPS.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(5)">
+                <td><strong>#5</strong></td>
+                <td><span class="severity-badge" style="background-color: #fd7e14;">HIGH</span></td>
+                <td><strong>Cross-Site Scripting (XSS) in Form</strong></td>
+                <td><a href="http://testphp.vulnweb.com/search.php?test=query" target="_blank" class="url-link">http://testphp.vulnweb.com/search.php?test=query</a></td>
+                <td>Reflected XSS vulnerability detected in form at http://testphp.vulnweb.com/search.php?test=query. At...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(5)">Details</button></td>
+            </tr>
+            <tr id="details-5" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>Reflected XSS vulnerability detected in form at http://testphp.vulnweb.com/search.php?test=query. Attackers can inject malicious scripts through this form.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com/search.php?test=query" target="_blank">http://testphp.vulnweb.com/search.php?test=query</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code"><script>alert('XSS')</script></code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Implement proper output encoding/escaping. Use Content-Security-Policy header.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:48</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(6)">
+                <td><strong>#6</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Missing Security Header: X-Frame-Options</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The X-Frame-Options header is missing from the HTTP response. This header helps protect against vari...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(6)">Details</button></td>
+            </tr>
+            <tr id="details-6" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The X-Frame-Options header is missing from the HTTP response. This header helps protect against various attacks and should be implemented.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Add X-Frame-Options header with value DENY or SAMEORIGIN to prevent clickjacking attacks.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(7)">
+                <td><strong>#7</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Missing Security Header: X-Content-Type-Options</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The X-Content-Type-Options header is missing from the HTTP response. This header helps protect again...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(7)">Details</button></td>
+            </tr>
+            <tr id="details-7" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The X-Content-Type-Options header is missing from the HTTP response. This header helps protect against various attacks and should be implemented.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Add X-Content-Type-Options: nosniff to prevent MIME type sniffing.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(8)">
+                <td><strong>#8</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Missing Security Header: Permissions-Policy</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The Permissions-Policy header is missing from the HTTP response. This header helps protect against v...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(8)">Details</button></td>
+            </tr>
+            <tr id="details-8" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The Permissions-Policy header is missing from the HTTP response. This header helps protect against various attacks and should be implemented.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Add Permissions-Policy header to restrict browser features.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(9)">
+                <td><strong>#9</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Missing Security Header: Cross-Origin-Opener-Policy</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The Cross-Origin-Opener-Policy header is missing from the HTTP response. This header helps protect a...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(9)">Details</button></td>
+            </tr>
+            <tr id="details-9" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The Cross-Origin-Opener-Policy header is missing from the HTTP response. This header helps protect against various attacks and should be implemented.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Add Cross-Origin-Opener-Policy header for cross-origin isolation.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(10)">
+                <td><strong>#10</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Missing Security Header: Cross-Origin-Resource-Policy</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The Cross-Origin-Resource-Policy header is missing from the HTTP response. This header helps protect...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(10)">Details</button></td>
+            </tr>
+            <tr id="details-10" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The Cross-Origin-Resource-Policy header is missing from the HTTP response. This header helps protect against various attacks and should be implemented.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Add Cross-Origin-Resource-Policy header to prevent cross-origin leaks.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(11)">
+                <td><strong>#11</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Exposed Sensitive File: /admin</strong></td>
+                <td><a href="http://testphp.vulnweb.com/admin" target="_blank" class="url-link">http://testphp.vulnweb.com/admin</a></td>
+                <td>A sensitive file is publicly accessible at /admin. Exposing this file could leak sensitive informati...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(11)">Details</button></td>
+            </tr>
+            <tr id="details-11" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>A sensitive file is publicly accessible at /admin. Exposing this file could leak sensitive information including credentials, source code, or configuration details.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com/admin" target="_blank">http://testphp.vulnweb.com/admin</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Remove or restrict access to this file. Configure web server to deny access to sensitive files and directories. Add appropriate rules to .htaccess or web server configuration.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:18:16</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(12)">
+                <td><strong>#12</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Exposed Sensitive File: /crossdomain.xml</strong></td>
+                <td><a href="http://testphp.vulnweb.com/crossdomain.xml" target="_blank" class="url-link">http://testphp.vulnweb.com/crossdomain.xml</a></td>
+                <td>A sensitive file is publicly accessible at /crossdomain.xml. Exposing this file could leak sensitive...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(12)">Details</button></td>
+            </tr>
+            <tr id="details-12" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>A sensitive file is publicly accessible at /crossdomain.xml. Exposing this file could leak sensitive information including credentials, source code, or configuration details.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com/crossdomain.xml" target="_blank">http://testphp.vulnweb.com/crossdomain.xml</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Remove or restrict access to this file. Configure web server to deny access to sensitive files and directories. Add appropriate rules to .htaccess or web server configuration.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:18:16</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(13)">
+                <td><strong>#13</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Exposed Sensitive File: /clientaccesspolicy.xml</strong></td>
+                <td><a href="http://testphp.vulnweb.com/clientaccesspolicy.xml" target="_blank" class="url-link">http://testphp.vulnweb.com/clientaccesspolicy.xml</a></td>
+                <td>A sensitive file is publicly accessible at /clientaccesspolicy.xml. Exposing this file could leak se...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(13)">Details</button></td>
+            </tr>
+            <tr id="details-13" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>A sensitive file is publicly accessible at /clientaccesspolicy.xml. Exposing this file could leak sensitive information including credentials, source code, or configuration details.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com/clientaccesspolicy.xml" target="_blank">http://testphp.vulnweb.com/clientaccesspolicy.xml</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Remove or restrict access to this file. Configure web server to deny access to sensitive files and directories. Add appropriate rules to .htaccess or web server configuration.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:18:16</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(14)">
+                <td><strong>#14</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Clickjacking Vulnerability</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The application can be embedded in frames/iframes from other domains. This allows attackers to perfo...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(14)">Details</button></td>
+            </tr>
+            <tr id="details-14" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The application can be embedded in frames/iframes from other domains. This allows attackers to perform clickjacking attacks where users are tricked into clicking on concealed elements.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Add X-Frame-Options header with value DENY or SAMEORIGIN. Alternatively, use Content-Security-Policy with frame-ancestors directive.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:18:19</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(15)">
+                <td><strong>#15</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Missing CSRF Protection</strong></td>
+                <td><a href="http://testphp.vulnweb.com/search.php?test=query" target="_blank" class="url-link">http://testphp.vulnweb.com/search.php?test=query</a></td>
+                <td>Form at http://testphp.vulnweb.com/search.php?test=query appears to lack CSRF protection. Attackers ...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(15)">Details</button></td>
+            </tr>
+            <tr id="details-15" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>Form at http://testphp.vulnweb.com/search.php?test=query appears to lack CSRF protection. Attackers could trick authenticated users into submitting unwanted actions.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com/search.php?test=query" target="_blank">http://testphp.vulnweb.com/search.php?test=query</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Implement anti-CSRF tokens in all state-changing forms. Use SameSite cookie attribute. Verify tokens on the server side.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:18:20</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(16)">
+                <td><strong>#16</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Information Disclosure: Email Addresses</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>Potential Email Addresses found exposed in the response. This information could be used by attackers...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(16)">Details</button></td>
+            </tr>
+            <tr id="details-16" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>Potential Email Addresses found exposed in the response. This information could be used by attackers for social engineering, credential stuffing, or other attacks.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Remove sensitive data from client-side code. Ensure proper data sanitization before displaying to users. Review what information needs to be exposed.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:18:20</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(17)">
+                <td><strong>#17</strong></td>
+                <td><span class="severity-badge" style="background-color: #ffc107;">MEDIUM</span></td>
+                <td><strong>Information Disclosure: Phone Numbers</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>Potential Phone Numbers found exposed in the response. This information could be used by attackers f...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(17)">Details</button></td>
+            </tr>
+            <tr id="details-17" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>Potential Phone Numbers found exposed in the response. This information could be used by attackers for social engineering, credential stuffing, or other attacks.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Remove sensitive data from client-side code. Ensure proper data sanitization before displaying to users. Review what information needs to be exposed.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:18:20</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(18)">
+                <td><strong>#18</strong></td>
+                <td><span class="severity-badge" style="background-color: #17a2b8;">LOW</span></td>
+                <td><strong>Missing Security Header: X-XSS-Protection</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The X-XSS-Protection header is missing from the HTTP response. This header helps protect against var...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(18)">Details</button></td>
+            </tr>
+            <tr id="details-18" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The X-XSS-Protection header is missing from the HTTP response. This header helps protect against various attacks and should be implemented.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Add X-XSS-Protection: 1; mode=block header (deprecated but still useful for older browsers).</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(19)">
+                <td><strong>#19</strong></td>
+                <td><span class="severity-badge" style="background-color: #17a2b8;">LOW</span></td>
+                <td><strong>Missing Security Header: Referrer-Policy</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The Referrer-Policy header is missing from the HTTP response. This header helps protect against vari...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(19)">Details</button></td>
+            </tr>
+            <tr id="details-19" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The Referrer-Policy header is missing from the HTTP response. This header helps protect against various attacks and should be implemented.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Add Referrer-Policy header to control referrer information.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(20)">
+                <td><strong>#20</strong></td>
+                <td><span class="severity-badge" style="background-color: #17a2b8;">LOW</span></td>
+                <td><strong>Server Version Disclosure</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>The Server header discloses version information: nginx/1.19.0. This information can help attackers i...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(20)">Details</button></td>
+            </tr>
+            <tr id="details-20" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>The Server header discloses version information: nginx/1.19.0. This information can help attackers identify known vulnerabilities.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Configure the server to hide version information in the Server header.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr class="vuln-row" onclick="toggleDetails(21)">
+                <td><strong>#21</strong></td>
+                <td><span class="severity-badge" style="background-color: #17a2b8;">LOW</span></td>
+                <td><strong>Technology Disclosure via X-Powered-By</strong></td>
+                <td><a href="http://testphp.vulnweb.com" target="_blank" class="url-link">http://testphp.vulnweb.com</a></td>
+                <td>X-Powered-By header discloses technology: PHP/5.6.40-38+ubuntu20.04.1+deb.sury.org+1. This informati...</td>
+                <td><button class="expand-btn" onclick="event.stopPropagation(); toggleDetails(21)">Details</button></td>
+            </tr>
+            <tr id="details-21" class="details-row">
+                <td colspan="6">
+                    <div class="details-content">
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">🔍 Full Description:</span>
+                                <p>X-Powered-By header discloses technology: PHP/5.6.40-38+ubuntu20.04.1+deb.sury.org+1. This information aids attackers in targeting specific vulnerabilities.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🔗 Full URL:</span>
+                                <p><a href="http://testphp.vulnweb.com" target="_blank">http://testphp.vulnweb.com</a></p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">💉 Payload:</span>
+                                <code class="payload-code">N/A</code>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">✅ Recommendation:</span>
+                                <p>Remove or sanitize the X-Powered-By header from responses.</p>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">🕐 Discovered:</span>
+                                <p>2026-02-14 13:16:45</p>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>🔐 Generated by Advanced VAPT Scanner v2.0 | For Authorized Security Testing Only</p>
+            <p>Report generated on February 14, 2026 at 01:18 PM</p>
+        </div>
+    </div>
+    
+    <script>
+        // Toggle vulnerability details
+        function toggleDetails(id) {
+            const row = document.getElementById('details-' + id);
+            row.classList.toggle('show');
+        }
+        
+        // Severity Distribution Pie Chart
+        const severityCtx = document.getElementById('severityChart').getContext('2d');
+        new Chart(severityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'High', 'Medium', 'Low', 'Info'],
+                datasets: [{
+                    data: [1, 4, 12, 4, 0],
+                    backgroundColor: [
+                        '#dc3545',
+                        '#fd7e14',
+                        '#ffc107',
+                        '#17a2b8',
+                        '#6c757d'
+                    ],
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 2,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#94a3b8',
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+        
+        // Category Bar Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'bar',
+            data: {
+                labels: ["SQL Injection", "Security Headers", "Other", "XSS", "Sensitive Files", "Clickjacking", "CSRF", "Information Disclosure"],
+                datasets: [{
+                    label: 'Vulnerabilities',
+                    data: [1, 8, 1, 2, 3, 1, 1, 4],
+                    backgroundColor: [
+                        'rgba(220, 53, 69, 0.8)',
+                        'rgba(253, 126, 20, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(23, 162, 184, 0.8)',
+                        'rgba(108, 117, 125, 0.8)',
+                        'rgba(124, 58, 237, 0.8)',
+                        'rgba(236, 72, 153, 0.8)',
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(168, 85, 247, 0.8)'
+                    ],
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255,255,255,0.05)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+        
