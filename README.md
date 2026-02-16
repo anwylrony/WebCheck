@@ -51,8 +51,8 @@ The scanner performs a wide range of checks to identify security weaknesses:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/anwylrony/vapt-scanner.git
-   cd vapt-scanner
+  git clone https://github.com/anwylrony/WebCheck.git
+   cd WebCheck
 ````
 
 2. **Install dependencies**
